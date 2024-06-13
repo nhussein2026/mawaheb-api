@@ -1,106 +1,207 @@
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { body, validationResult } = require('express-validator');
 
-const userController = {
-    register: async (req, res) => {
-        try {
-            const { name, email, password } = req.body;
-            const existingUser = await User.findOne({ email });
-            if (existingUser) {
-                return res.status(400).json({ message: 'Email already exists' });
-            }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const user = new User({
-                name,
-                email,
-                password: hashedPassword
-            });
-            await user.save();
-            res.status(201).json({ message: 'User registered successfully' });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || '8!s4FtKNnA6LqZp2@G$xYs7!jBt4U#m';
 
-    login: async (req, res) => {
-        try {
-            const { email, password } = req.body;
-            const user = await User.findOne({ email });
-            if (!user) {
-                return res.status(401).json({ message: 'Invalid email or password' });
-            }
-            const passwordMatch = await bcrypt.compare(password, user.password);
-            if (!passwordMatch) {
-                return res.status(401).json({ message: 'Invalid email or password' });
-            }
-            const accessToken = jwt.sign({ _id: user._id, email: user.email, role: user.role }, process.env.ACCESS_TOKEN_SECRET);
-            res.json({ accessToken });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
 
-    getUsers: async (req, res) => {
-        try {
-            const users = await User.find();
-            res.json(users);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
-
-    getUserById: async (req, res) => {
-        try {
-            const user = await User.findById(req.params.id);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.json(user);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
-
-    updateUser: async (req, res) => {
-        try {
-            const { name, email, phone_number, date_of_birth, gender, current_education_level, linkedin_link, website } = req.body;
-            const updatedUser = await User.findByIdAndUpdate(req.params.id, {
-                name,
-                email,
-                phone_number,
-                date_of_birth,
-                gender,
-                current_education_level,
-                linkedin_link,
-                website
-            }, { new: true });
-            if (!updatedUser) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.json(updatedUser);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    },
-
-    deleteUser: async (req, res) => {
-        try {
-            const deletedUser = await User.findByIdAndDelete(req.params.id);
-            if (!deletedUser) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.json({ message: 'User deleted successfully' });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Server error' });
-        }
-    }
+// Helper function to handle errors
+const handleErrors = (res, errors) => {
+  return res.status(400).json({ errors: errors.array() });
 };
 
-module.exports = userController;
+// Create User
+exports.createUser = [
+  // Validation and sanitization
+  body('username').notEmpty().withMessage('Username is required'),
+  body('email').isEmail().withMessage('Please include a valid email'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return handleErrors(res, errors);
+    }
+
+    const { username, email, password } = req.body;
+
+    try {
+      let user = await User.findOne({ email });
+      if (user) {
+        return res.status(400).json({ errors: [{ msg: 'User already exists' }] });
+      }
+
+      user = new User({
+        username,
+        email,
+        passwordHash: await bcrypt.hash(password, 10),
+      });
+
+      await user.save();
+
+      res.status(201).json({ msg: 'User created successfully' });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Server error');
+    }
+  }
+];
+
+// Login User
+exports.loginUser = [
+  body('email').isEmail().withMessage('Please include a valid email'),
+  body('password').exists().withMessage('Password is required'),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return handleErrors(res, errors);
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ errors: [{ msg: 'Invalid credentials' }] });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ errors: [{ msg: 'Invalid credentials' }] });
+      }
+
+      const payload = {
+        user: {
+          id: user.id,
+          role: user.role,
+          email: user.email
+        }
+      };
+
+      jwt.sign(payload, JWT_SECRET, { expiresIn: '100h' }, (err, token) => {
+        if (err) throw err;
+        res.json({ token, user: payload.user });
+      });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Server error');
+    }
+  }
+];
+
+// Update User Info
+exports.updateUser = [
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, username, email, affiliation, bio } = req.body;
+
+    try {
+      let user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      // Update user details
+      user.name = name || user.name;
+      user.username = username || user.username;
+      user.email = email || user.email;
+      user.affiliation = affiliation || user.affiliation;
+      user.bio = bio || user.bio;
+
+      // If a new profile image is uploaded, update the imageUrl
+      if (req.file) {
+        user.imageUrl = req.file.path.replace(/\\/g, '/'); // Replace backslashes with forward slashes
+      }
+
+      await user.save();
+
+      res.json({ msg: 'User updated successfully', user });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Server error');
+    }
+  }
+];
+
+// Delete User (Admin Only)
+exports.deleteUser = async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ msg: 'Access denied' });
+  }
+
+  try {
+    const user = await User.findById(req.params.id);
+    console.log("user id: ", user)
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    await user.deleteOne();
+
+    res.json({ msg: 'User deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
+  }
+};
+
+
+// Fetch User Profile
+exports.fetchUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// Fetch All Researchers
+exports.fetchAllResearchers = async (req, res) => {
+  try {
+    const researchers = await User.find({ role: 'researcher' }).select('-password');
+    res.json({ researchers });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
+  }
+};
+
+
+// Fetch User Role
+exports.fetchUserRole = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('role');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    res.json({ role: user.role });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// Fetch User by ID
+exports.fetchUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
+  }
+};

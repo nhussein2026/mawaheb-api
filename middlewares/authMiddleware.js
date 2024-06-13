@@ -3,16 +3,25 @@ const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Employee = require('../models/Employee');
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || '8!s4FtKNnA6LqZp2@G$xYs7!jBt4U#m';
+const authenticated = (req, res, next) => {
+    const authHeader = req.header('authorization');
     const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
+    if (!authHeader) {
+        return res.status(401).json({ msg: 'No token, authorization denied' });
+      }
+    
+      if (!token) {
+        return res.status(401).json({ msg: 'No token, authorization denied' });
+      }
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded.user;
         next();
-    });
+      } catch (err) {
+        res.status(401).json({ msg: 'Token is not valid' });
+      }
 };
 
 const isAdmin = async (req, res, next) => {
@@ -37,4 +46,4 @@ const isEmployee = async (req, res, next) => {
     }
 };
 
-module.exports = { authenticateToken, isAdmin, isEmployee };
+module.exports = { authenticated, isAdmin, isEmployee };
