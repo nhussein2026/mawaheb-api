@@ -99,7 +99,7 @@ exports.updateUser = [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, username, email, affiliation, bio } = req.body;
+    const { name, email, password, bio, phone_number, date_of_birth, gender, current_education_level, linkedin_link, website, role } = req.body;
 
     try {
       let user = await User.findById(req.user.id);
@@ -107,12 +107,24 @@ exports.updateUser = [
         return res.status(404).json({ msg: 'User not found' });
       }
 
+      // Only allow admin to update role
+      if (role && req.user.role !== 'Admin') {
+        return res.status(403).json({ msg: 'Only admin can update role' });
+      }
+
       // Update user details
       user.name = name || user.name;
       user.username = username || user.username;
       user.email = email || user.email;
-      user.affiliation = affiliation || user.affiliation;
+      user.password = password || user.password;
       user.bio = bio || user.bio;
+      user.phone_number = phone_number || user.phone_number;
+      user.date_of_birth = date_of_birth || user.date_of_birth;
+      user.gender = gender || user.gender;
+      user.current_education_level = current_education_level || user.current_education_level;
+      user.linkedin_link = linkedin_link || user.linkedin_link;
+      user.website = website || user.website;
+      user.role = role || user.role;
 
       // If a new profile image is uploaded, update the imageUrl
       if (req.file) {
@@ -128,6 +140,7 @@ exports.updateUser = [
     }
   }
 ];
+
 
 // Delete User (Admin Only)
 exports.deleteUser = async (req, res) => {
@@ -167,7 +180,7 @@ exports.fetchUserProfile = async (req, res) => {
 };
 
 // Fetch All Researchers
-exports.fetchAllResearchers = async (req, res) => {
+exports.fetchAllUsers = async (req, res) => {
   try {
     const researchers = await User.find({ role: 'researcher' }).select('-password');
     res.json({ researchers });

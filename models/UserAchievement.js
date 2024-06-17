@@ -4,7 +4,7 @@ const userAchievementSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
     category: { type: String },
-    photo: { type: String },
+    achievement_image: { type: String },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 

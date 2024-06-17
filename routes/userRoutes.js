@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticated } = require('../middlewares/authMiddleware');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads' }); // set up Multer
 
 // Register a new user
 router.post('/register', userController.createUser);
@@ -10,15 +12,19 @@ router.post('/register', userController.createUser);
 router.post('/login', userController.loginUser);
 
 // Get all users
-router.get('/users', authenticated, userController.fetchAllResearchers);
+router.get('/users', authenticated, userController.fetchAllUsers);
 
 // Get a user by ID
 router.get('/users/:id', authenticated, userController.fetchUserById);
 
 // Update a user by ID
-router.put('/users/:id', authenticated, userController.updateUser);
+router.put('/update-profile', authenticated, upload.single('profileImage'), userController.updateUser);
 
 // Delete a user by ID
 router.delete('/users/:id', authenticated, userController.deleteUser);
+
+//user profile endpoint
+router.get('/profile', authenticated, userController.fetchUserProfile);
+
 
 module.exports = router;

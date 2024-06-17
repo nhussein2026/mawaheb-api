@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Admin = require('../models/Admin');
 const Employee = require('../models/Employee');
 
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || '8!s4FtKNnA6LqZp2@G$xYs7!jBt4U#m';
@@ -26,8 +25,8 @@ const authenticated = (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
     try {
-        const admin = await Admin.findOne({ user: req.user._id });
-        if (!admin) return res.status(403).json({ message: 'Access denied: Not an admin' });
+        const user = await User.findOne({ _id: req.user._id });
+        if (!user || user.role !== 'Admin') return res.status(403).json({ message: 'Access denied: Not an admin' });
         next();
     } catch (error) {
         console.error(error);
