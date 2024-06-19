@@ -1,6 +1,8 @@
 const express = require('express');
 const userRoutes = require('./routes/userRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
+const courseRoutes = require('./routes/courseRoutes');
+const noteRoutes = require('./routes/noteRoutes');
 require('dotenv').config();
 const cors = require('cors');
 const path = require('path');
@@ -25,8 +27,14 @@ connectDB();
 //user rotes
 app.use('/user', userRoutes)
 
-//user rotes
-app.use('/', certificateRoutes)
+//certificates rotes
+app.use('/', certificateRoutes);
+
+//course rotes
+app.use('/', courseRoutes);
+
+//notes rotes
+app.use('/', noteRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;

@@ -26,5 +26,10 @@ router.delete('/users/:id', authenticated, userController.deleteUser);
 //user profile endpoint
 router.get('/profile', authenticated, userController.fetchUserProfile);
 
+// Forgot password
+router.post('/forgot-password', userController.forgotPassword);
+
+// Reset password
+router.post('/reset-password/:token', userController.resetPassword);
 
 module.exports = router;
