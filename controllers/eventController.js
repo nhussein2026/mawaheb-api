@@ -1,4 +1,4 @@
-const Course = require('../models/Course');
+const Event = require('../models/Event');
 const multer = require('multer');
 const path = require('path');
 
@@ -24,10 +24,10 @@ const upload = multer({
             cb('Error: Images Only!');
         }
     }
-}).single('course_image'); // Accept a single file with the name 'course_image'
+}).single('photo'); // Accept a single file with the name 'photo'
 
-const courseController = {
-    createCourse: async (req, res) => {
+const eventController = {
+    createEvent: async (req, res) => {
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(400).json({ message: err });
@@ -37,15 +37,15 @@ const courseController = {
                 const { title, description } = req.body;
                 const userId = req.user.id; // Extract user ID from authenticated middleware
 
-                const course = new Course({
+                const event = new Event({
                     title,
                     description,
                     user: userId,
-                    course_image: req.file ? req.file.path : undefined
+                    photo: req.file ? req.file.path : undefined
                 });
 
-                await course.save();
-                res.status(201).json({ message: 'Course created successfully', course });
+                await event.save();
+                res.status(201).json({ message: 'Event created successfully', event });
             } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: 'Server error' });
@@ -53,30 +53,30 @@ const courseController = {
         });
     },
 
-    getCourses: async (req, res) => {
+    getEvents: async (req, res) => {
         try {
-            const courses = await Course.find({ user: req.user.id });
-            res.status(200).json(courses);
+            const events = await Event.find({ user: req.user.id });
+            res.status(200).json(events);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
         }
     },
 
-    getCourseById: async (req, res) => {
+    getEventById: async (req, res) => {
         try {
-            const course = await Course.findById(req.params.id);
-            if (!course || course.user.toString() !== req.user.id.toString()) {
-                return res.status(404).json({ message: 'Course not found' });
+            const event = await Event.findById(req.params.id);
+            if (!event || event.user.toString() !== req.user.id.toString()) {
+                return res.status(404).json({ message: 'Event not found' });
             }
-            res.status(200).json(course);
+            res.status(200).json(event);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
         }
     },
 
-    updateCourse: async (req, res) => {
+    updateEvent: async (req, res) => {
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(400).json({ message: err });
@@ -84,20 +84,20 @@ const courseController = {
 
             try {
                 const { title, description } = req.body;
-                const course = await Course.findById(req.params.id);
+                const event = await Event.findById(req.params.id);
 
-                if (!course || course.user.toString() !== req.user.id.toString()) {
-                    return res.status(404).json({ message: 'Course not found' });
+                if (!event || event.user.toString() !== req.user.id.toString()) {
+                    return res.status(404).json({ message: 'Event not found' });
                 }
 
-                course.title = title || course.title;
-                course.description = description || course.description;
+                event.title = title || event.title;
+                event.description = description || event.description;
                 if (req.file) {
-                    course.course_image = req.file.path;
+                    event.photo = req.file.path;
                 }
 
-                await course.save();
-                res.status(200).json({ message: 'Course updated successfully', course });
+                await event.save();
+                res.status(200).json({ message: 'Event updated successfully', event });
             } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: 'Server error' });
@@ -105,16 +105,16 @@ const courseController = {
         });
     },
 
-    deleteCourse: async (req, res) => {
+    deleteEvent: async (req, res) => {
         try {
-            const course = await Course.findById(req.params.id);
+            const event = await Event.findById(req.params.id);
 
-            if (!course || course.user.toString() !== req.user.id.toString()) {
-                return res.status(404).json({ message: 'Course not found' });
+            if (!event || event.user.toString() !== req.user.id.toString()) {
+                return res.status(404).json({ message: 'Event not found' });
             }
 
-            await course.deleteOne();
-            res.status(200).json({ message: 'Course deleted successfully' });
+            await event.deleteOne();
+            res.status(200).json({ message: 'Event deleted successfully' });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
@@ -122,4 +122,4 @@ const courseController = {
     }
 };
 
-module.exports = courseController;
+module.exports = eventController;

@@ -3,6 +3,9 @@ const userRoutes = require('./routes/userRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const noteRoutes = require('./routes/noteRoutes');
+const userAchievementRoutes = require('./routes/userAchievementRoutes')
+const eventRoutes = require('./routes/eventRoutes')
+const difficultyRoutes = require('./routes/difficultyRoutes')
 require('dotenv').config();
 const cors = require('cors');
 const path = require('path');
@@ -35,6 +38,17 @@ app.use('/', courseRoutes);
 
 //notes rotes
 app.use('/', noteRoutes);
+
+// userAchievement Routes
+app.use('/', userAchievementRoutes);
+
+
+// event routes
+app.use('/', eventRoutes);
+
+//difficulties routes
+
+app.use('/', difficultyRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
