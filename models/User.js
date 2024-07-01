@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   current_education_level: { type: String },
   linkedin_link: { type: String },
   website: { type: String },
-  role: { type: String, enum: ["User", "Employee", "Admin"], default: "User" },
+  role: { type: String, enum: ["User", "Employee", "Admin", "Institute Student", "Scholarship Student"], default: "User" },
   imageUrl: {
     type: String,
   },

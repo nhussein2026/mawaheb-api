@@ -28,6 +28,7 @@ const upload = multer({
 
 const difficultyController = {
     createDifficulty: async (req, res) => {
+        console.log("I am getting req to create difficulties: ", req)
         try {
             const { title, description } = req.body;
             const userId = req.user.id; // Extract user ID from authenticated middleware

@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
-const userReportSchema = new mongoose.Schema({
+const studentReportSchema = new mongoose.Schema({
   title: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   noteId: { type: mongoose.Schema.Types.ObjectId, ref: "Note" },
-  strugglesId: { type: mongoose.Schema.Types.ObjectId, ref: "Difficulty" },
+  difficultiesId: { type: mongoose.Schema.Types.ObjectId, ref: "Difficulty" },
   userAchievementId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "UserAchievement",
@@ -16,6 +16,6 @@ const userReportSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const UserReport = mongoose.model("UserReport", userReportSchema);
+const studentReport = mongoose.model("studentReport", studentReportSchema);
 
-module.exports = UserReport;
+module.exports = studentReport;

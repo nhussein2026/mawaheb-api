@@ -14,10 +14,21 @@ const handleErrors = (res, errors) => {
 // Set up nodemailer
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // true for 465, false for other ports
   auth: {
-      user: 'your-email@gmail.com',
-      pass: 'your-email-password',
+      user: 'devlabtest101@gmail.com',
+      pass: 'Dev1234#',
   },
+  tls: {
+    // do not fail on invalid certs
+    rejectUnauthorized: false
+  },
+  greetingTimeout: 20000, // 20 seconds
+  connectionTimeout: 30000, // 30 seconds
+  logger: true,
+  debug: true, // show debug output
 });
 
 
@@ -25,7 +36,7 @@ const transporter = nodemailer.createTransport({
 // Create User
 exports.createUser = [
   // Validation and sanitization
-  body('username').notEmpty().withMessage('Username is required'),
+  body('name').notEmpty().withMessage('name is required'),
   body('email').isEmail().withMessage('Please include a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
 
@@ -35,7 +46,7 @@ exports.createUser = [
       return handleErrors(res, errors);
     }
 
-    const { username, email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
       let user = await User.findOne({ email });
@@ -44,9 +55,9 @@ exports.createUser = [
       }
 
       user = new User({
-        username,
+        name,
         email,
-        passwordHash: await bcrypt.hash(password, 10),
+        password: await bcrypt.hash(password, 10),
       });
 
       await user.save();
@@ -125,7 +136,6 @@ exports.updateUser = [
 
       // Update user details
       user.name = name || user.name;
-      user.username = username || user.username;
       user.email = email || user.email;
       user.password = password || user.password;
       user.bio = bio || user.bio;
@@ -193,8 +203,8 @@ exports.fetchUserProfile = async (req, res) => {
 // Fetch All Researchers
 exports.fetchAllUsers = async (req, res) => {
   try {
-    const researchers = await User.find({ role: 'researcher' }).select('-password');
-    res.json({ researchers });
+    const users = await User.find().select('-password');
+    res.json({ users });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server error');
@@ -251,16 +261,16 @@ exports.forgotPassword = async (req, res) => {
       const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
       const mailOptions = {
           to: user.email,
-          from: 'your-email@gmail.com',
+          from: 'devlabtest101@gmail.com',
           subject: 'Password Reset',
           text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
                 `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
                 `${resetUrl}\n\n` +
                 `If you did not request this, please ignore this email and your password will remain unchanged.\n`,
       };
-
       transporter.sendMail(mailOptions, (error) => {
           if (error) {
+            console.log("Error sending email: ", error)
               return res.status(500).send('Email could not be sent');
           }
           res.status(200).json({ msg: 'Password reset email sent' });

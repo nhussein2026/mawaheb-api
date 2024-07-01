@@ -34,13 +34,15 @@ const certificateController = {
             }
             const { title, description, certificate_link } = req.body;
             const certificate_image = req.file ? req.file.filename : null;
+            const userId = req.user.id; // Extract user ID from authenticated middleware
 
             try {
                 const certificate = new Certificate({
                     title,
                     description,
                     certificate_image,
-                    certificate_link
+                    certificate_link,
+                    user: userId
                 });
                 await certificate.save();
                 res.status(201).json({ message: 'Certificate created successfully', certificate });
