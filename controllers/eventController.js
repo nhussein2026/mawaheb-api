@@ -40,7 +40,7 @@ const eventController = {
                 const event = new Event({
                     title,
                     description,
-                    user: userId,
+                    userId: userId,
                     photo: req.file ? req.file.path : undefined
                 });
 

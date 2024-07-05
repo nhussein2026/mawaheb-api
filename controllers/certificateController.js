@@ -42,7 +42,7 @@ const certificateController = {
                     description,
                     certificate_image,
                     certificate_link,
-                    user: userId
+                    userId: userId
                 });
                 await certificate.save();
                 res.status(201).json({ message: 'Certificate created successfully', certificate });

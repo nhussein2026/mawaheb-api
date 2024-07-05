@@ -5,6 +5,8 @@ const { body, validationResult } = require('express-validator');
 const crypto = require('crypto');
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || '8!s4FtKNnA6LqZp2@G$xYs7!jBt4U#m';
 const nodemailer = require('nodemailer');
+const University = require('../models/University');
+
 
 // Helper function to handle errors
 const handleErrors = (res, errors) => {
@@ -309,5 +311,218 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
       console.error(error.message);
       res.status(500).send('Server error');
+  }
+};
+
+// Fetch All Users with Summary Information Based on Category
+
+// Fetch Users Summary by Category
+exports.fetchUsersSummaryByCategory = async (req, res) => {
+  try {
+    const { category } = req.query;
+    let result = [];
+
+    switch (category) {
+      case 'courses':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'courses',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'courses',
+            },
+          },
+          {
+            $project: {
+              id: 1,
+              name: 1,
+              email: 1,
+              courseCount: { $size: '$courses' }, // Count of courses enrolled
+            },
+          },
+        ]);
+        break;
+      case 'certificates':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'certificates',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'certificates',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              certificateCount: { $size: '$certificates' }, // Count of certificates
+            },
+          },
+        ]);
+        break;
+      case 'difficulties':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'difficulties',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'difficulties',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              difficultyCount: { $size: '$difficulties' }, // Count of difficulties reported
+            },
+          },
+        ]);
+        break;
+      case 'events':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'events',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'events',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              eventCount: { $size: '$events' }, // Count of events participated
+            },
+          },
+        ]);
+        break;
+      case 'financialReports':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'financialreports',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'financialReports',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              financialReportCount: { $size: '$financialReports' }, // Count of financial reports
+            },
+          },
+        ]);
+        break;
+      case 'semesters':
+        result = await University.aggregate([
+          {
+            $lookup: {
+              from: 'semesters',
+              localField: 'userId',
+              foreignField: '_id',
+              as: 'Semesters',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              universityName: 1,
+              universityType: 1,
+              semesterCount: { $size: '$Semesters' }, // Count of semesters attended
+            },
+          },
+        ]);
+        break;
+      case 'reports':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'studentreports',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'reports',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              reportCount: { $size: '$reports' }, // Count of reports submitted
+            },
+          },
+        ]);
+        break;
+      case 'tickets':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'Ticket',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'Tickets',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              ticketCount: { $size: '$Tickets' }, // Count of tickets raised
+            },
+          },
+        ]);
+        break;
+      case 'university':
+        result = await University.aggregate([
+          {
+            $project: {
+              _id: 1,
+              universityName: 1,
+              universityType: 1,
+              totalGPA: 1,
+              semesterCount: { $size: '$semesters' }, // Count of semesters
+            },
+          },
+        ]);
+        break;
+      case 'userAchievements':
+        result = await User.aggregate([
+          {
+            $lookup: {
+              from: 'UserAchievement',
+              localField: '_id',
+              foreignField: 'userId',
+              as: 'Achievements',
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              achievementCount: { $size: '$Achievements' }, // Count of achievements
+            },
+          },
+        ]);
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid category' });
+    }
+
+    res.json({ result });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send('Server error');
   }
 };

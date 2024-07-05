@@ -1,4 +1,4 @@
-const Course = require('../models/Course');
+const FinancialReport = require('../models/FinancialReport');
 const multer = require('multer');
 const path = require('path');
 
@@ -24,28 +24,29 @@ const upload = multer({
             cb('Error: Images Only!');
         }
     }
-}).single('course_image'); // Accept a single file with the name 'course_image'
+}).single('financial_report_image'); // Accept a single file with the name 'course_image'
 
-const courseController = {
-    createCourse: async (req, res) => {
+const financialReportController = {
+    createFinancialReport: async (req, res) => {
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(400).json({ message: err });
             }
 
             try {
-                const { title, description } = req.body;
+                const { title, description, date_of_report } = req.body;
                 const userId = req.user.id; // Extract user ID from authenticated middleware
 
-                const course = new Course({
+                const financialReport = new FinancialReport({
                     title,
                     description,
                     userId: userId,
-                    course_image: req.file ? req.file.path : undefined
+                    financial_report_image: req.file ? req.file.path : undefined,
+                    date_of_report
                 });
 
-                await course.save();
-                res.status(201).json({ message: 'Course created successfully', course });
+                await financialReport.save();
+                res.status(201).json({ message: 'Course created successfully', FinancialReport });
             } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: 'Server error' });
@@ -53,51 +54,51 @@ const courseController = {
         });
     },
 
-    getCourses: async (req, res) => {
+    getReport: async (req, res) => {
         try {
-            const courses = await Course.find({ user: req.user.id });
-            res.status(200).json(courses);
+            const report = await FinancialReport.find({ user: req.user.id });
+            res.status(200).json(report);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
         }
     },
 
-    getCourseById: async (req, res) => {
+    getReportById: async (req, res) => {
         try {
-            const course = await Course.findById(req.params.id);
-            if (!course || course.user.toString() !== req.user.id.toString()) {
-                return res.status(404).json({ message: 'Course not found' });
+            const report = await FinancialReport.findById(req.params.id);
+            if (!report || report.user.toString() !== req.user.id.toString()) {
+                return res.status(404).json({ message: 'report not found' });
             }
-            res.status(200).json(course);
+            res.status(200).json(report);
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
         }
     },
 
-    updateCourse: async (req, res) => {
+    updateFinancialReport: async (req, res) => {
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(400).json({ message: err });
             }
 
             try {
-                const { title, description } = req.body;
-                const course = await Course.findById(req.params.id);
+                const { title, description, date_of_report } = req.body;
+                const report = await FinancialReport.findById(req.params.id);
 
-                if (!course || course.user.toString() !== req.user.id.toString()) {
-                    return res.status(404).json({ message: 'Course not found' });
+                if (!report || report.user.toString() !== req.user.id.toString()) {
+                    return res.status(404).json({ message: 'report not found' });
                 }
 
-                course.title = title || course.title;
-                course.description = description || course.description;
+                report.title = title || report.title;
+                report.description = description || report.description;
                 if (req.file) {
-                    course.course_image = req.file.path;
+                    report.financial_report_image = req.file.path;
                 }
 
-                await course.save();
-                res.status(200).json({ message: 'Course updated successfully', course });
+                await report.save();
+                res.status(200).json({ message: 'report updated successfully', report });
             } catch (error) {
                 console.error(error);
                 res.status(500).json({ message: 'Server error' });
@@ -105,16 +106,16 @@ const courseController = {
         });
     },
 
-    deleteCourse: async (req, res) => {
+    deleteFinancialReport: async (req, res) => {
         try {
-            const course = await Course.findById(req.params.id);
+            const report = await FinancialReport.findById(req.params.id);
 
-            if (!course || course.user.toString() !== req.user.id.toString()) {
-                return res.status(404).json({ message: 'Course not found' });
+            if (!report || report.user.toString() !== req.user.id.toString()) {
+                return res.status(404).json({ message: 'report not found' });
             }
 
-            await course.deleteOne();
-            res.status(200).json({ message: 'Course deleted successfully' });
+            await report.deleteOne();
+            res.status(200).json({ message: 'report deleted successfully' });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Server error' });
@@ -122,4 +123,4 @@ const courseController = {
     }
 };
 
-module.exports = courseController;
+module.exports = financialReportController;

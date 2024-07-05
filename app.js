@@ -8,6 +8,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const difficultyRoutes = require('./routes/difficultyRoutes');
 const universityRoutes = require('./routes/universityRoutes');
 const studentReportRoutes = require('./routes/studentReportRoutes');
+const financialReportRoutes = require('./routes/financialReportRoutes');
 
 require('dotenv').config();
 const cors = require('cors');
@@ -57,6 +58,9 @@ app.use('/', universityRoutes);
 
 //student report routes
 app.use('/', studentReportRoutes);
+
+//financial report routes
+app.use('/', financialReportRoutes);
 
 
 // Start the server

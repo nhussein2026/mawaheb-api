@@ -25,7 +25,8 @@ const authenticated = (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
     try {
-        const user = await User.findOne({ _id: req.user._id });
+        const user = await User.findOne({ _id: req.user.id });
+        console.log("this is isAdmin mmiddleware: ", req.user)
         if (!user || user.role !== 'Admin') return res.status(403).json({ message: 'Access denied: Not an admin' });
         next();
     } catch (error) {

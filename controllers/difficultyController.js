@@ -36,7 +36,7 @@ const difficultyController = {
             const difficulty = new Difficulty({
                 title,
                 description,
-                user: userId
+                userId: userId
             });
 
             await difficulty.save();
@@ -49,7 +49,7 @@ const difficultyController = {
 
     getDifficulties: async (req, res) => {
         try {
-            const difficulties = await Difficulty.find({ user: req.user.id });
+            const difficulties = await Difficulty.find({ userId: req.user.id });
             res.status(200).json(difficulties);
         } catch (error) {
             console.error(error);

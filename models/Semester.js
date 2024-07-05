@@ -11,7 +11,9 @@ const semesterSchema = new mongoose.Schema({
     lg: { type: String, enum: ['AA', 'AB', 'BA', 'BB', 'CB', 'CC', 'DC', 'DD', 'FF'], required: true } // LG field
   }],
   resultImage: { type: String },
-  semesterGPA: { type: Number } // Calculated field
+  semesterGPA: { type: Number },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
 });
 
 const Semester = mongoose.model('Semester', semesterSchema);

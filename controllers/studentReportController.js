@@ -56,6 +56,7 @@ const studentReportController = {
       res.status(500).json({ message: 'Server error' });
     }
   },
+  
 
   getStudentReportById: async (req, res) => {
     try {
@@ -133,6 +134,24 @@ const studentReportController = {
       ]);
 
       res.status(200).json({ courses, notes, difficulties, userAchievements, events, certificates });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  },
+  
+  allReports: async (req, res) => {
+    try {
+      // Remove the filtering by userId to get all reports
+      const studentReports = await StudentReport.find()
+        .populate('courseId')
+        .populate('noteId')
+        .populate('difficultiesId')
+        .populate('userAchievementId')
+        .populate('eventId')
+        .populate('certificateId');
+
+      res.status(200).json({ studentReports });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error' });

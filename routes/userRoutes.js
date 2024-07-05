@@ -14,6 +14,9 @@ router.post('/login', userController.loginUser);
 // Get all users
 router.get('/users', authenticated, userController.fetchAllUsers);
 
+// summary of user data
+router.get('/summary/', authenticated, userController.fetchUsersSummaryByCategory);
+
 // Get a user by ID
 router.get('/users/:id', authenticated, userController.fetchUserById);
 

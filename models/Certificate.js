@@ -5,7 +5,7 @@ const certificateSchema = new mongoose.Schema({
   description: { type: String },
   certificate_image: { type: String },
   certificate_link: { type: String },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
 });
 
